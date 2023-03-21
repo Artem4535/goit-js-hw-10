@@ -1,7 +1,9 @@
 import './css/styles.css';
 import debounce from 'lodash.debounce';
+import Notiflix from 'notiflix';
 import marcup from './templetes/marcup';
 import previer from './templetes/previos-marcup'
+import fetchCountry from './fetch'
 
 const DEBOUNCE_DELAY = 300;
 const inputRef = document.querySelector('#search-box');
@@ -16,23 +18,25 @@ function listenInput(e) {
     const currentValue = e.target.value.trim();
      if (!currentValue) {
     inputRef.innerHTML = '';
-    inputRef.innerHTML = '';
+    countryList.innerHTML = '';
     return;
   }
 
     fetchCountry(currentValue).then(country => {
-        const countryList = country.map(country => country.name.common);
+        const countryList = country.map(country => country.name);
         if (countryList.length === 1) {
             createMarkup(country);
 
-        }  else if (countryList.length <= 5 && countryList.length > 1) {
+        }  else if (countryList.length <= 10 && countryList.length > 1) {
              createPreviusMarcup(country)
+        } else if (countryList.length > 10) {
+           Notiflix.Notify.info('Too many matches found. Please enter a more specific name.');
         }
 
     })
         
     .catch(error => {
-    console.log(error);
+     Notiflix.Notify.failure('Oops, there is no country with that name');
     }) 
     
     deleteCountriesInfo()
@@ -48,16 +52,6 @@ function createMarkup(country) {
 }
 
 
-function fetchCountry(countryName) {
-    const URl = 'https://restcountries.com/v3.1/name/';
-    const searchParams = new URLSearchParams({
-  fields: 'name,capital,population,flags,languages,',
-});
-
-return fetch(`${URl}${countryName}?${searchParams}`).then(response => {
-    return response.json()
-})
-}
 
 function deleteCountriesInfo() {
   infoCountryRef.innerHTML = '';
